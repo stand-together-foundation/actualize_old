@@ -22,7 +22,17 @@ In order to access data as described in this tutorial, you will need
 
 2. Access to the statistical programming language R, and ideally RStudio as an IDE, and 
 
-3. Within R, the current version of the `googledrive` and `dotenv` packages. 
+3. Within R, the current version of the `googledrive`, `dotenv`, `tidyverse`, and `paws` packages. 
+
+4. The current version of the [1Password CLI](https://app-updates.agilebits.com/product_history/CLI2) installed locally. 
+
+5. Completion of the ["Getting Started"](https://developer.1password.com/docs/cli/get-started) steps for the 1Password CLI. At a minimum, you should be able to complete the "Sign in to your account" steps on that page.
+
+6. Access to the data science vault on Last Pass, and the actualize secure note which contains environment variable specifications for this tutorial. If you do not have access to this resource, ask Tyler Carolan or Joe Mienko to provide you with access. 
+
+7. Run the `get-env-vars.sh` script at the root of this repository. This will use your OP credentials to assign the environment variables referenced above. 
+
+5. The current version of the [AWS CLI]() installed locally. 
 
 ## Data Storage
 
@@ -157,7 +167,7 @@ drive_download(
 
 drive_download(
   national1,
-  path = "~/actualize/data/national1.csv", 
+  path = "~/actualize/data/national1.xlsx", 
   overwrite = TRUE
 )
 
@@ -213,7 +223,88 @@ yonique1 <- readxl::read_xlsx(
   "~/actualize/data/yonique1.xlsx"
 )
 
+national1 <- readxl::read_xlsx(
+  "~/actualize/data/national1.xlsx"
+)
+
 ```
 
+### Import from CSV (on S3)
+
+The following chunks import data from CSV files located on an S3 bucket maintained by i360.
+
+```{r message=FALSE, warning=FALSE}
+# 
+# library(dplyr)
+# library(paws)
+# 
+# get_max_file_location <- function(bucket_contents) {
+#   bucket_contents_names <- paste0('X', 1:length(bucket_contents))
+#   
+#   names(bucket_contents) <- bucket_contents_names
+#   
+#   max_file_location <- as.data.frame(lapply(bucket_contents, unlist)) %>%
+#     rownames_to_column() %>%
+#     bind_rows() %>%
+#     pivot_longer(cols = bucket_contents_names) %>%
+#     filter(rowname == "LastModified") %>%
+#     mutate(value = as.integer(value)) %>%
+#     filter(value == max(value)) %>%
+#     .$name %>%
+#     readr::parse_number() 
+#   
+#   return(max_file_location)
+# }
+# 
+# dotenv::load_dot_env()
+# 
+# # Shared Data ID
+# shared_google_drive <- googledrive::drive_get(id = "1H1Q5k0CnaadKKCH1hFIZetrDLev5OlZl")
+# 
+# s3_i360 <- paws::s3(
+#   config = list(
+#     credentials = list(
+#       creds = list(
+#         access_key_id = Sys.getenv("I360_ACCESS_KEY_ID"),
+#         secret_access_key = Sys.getenv("I360_SECRET_ACCESS_KEY")
+#       )
+#     ),
+#     region = Sys.getenv("I360_REGION")
+#   )
+# )
+# 
+# bucket_contents <- s3_i360$list_objects(
+#   Bucket = Sys.getenv("I360_S3_BUCKET")
+# ) %>% 
+#   .$Contents
+# 
+# bucket_contents %>%
+#   .[[get_max_file_location(bucket_contents)]] %>%
+#   .$Key %>% 
+#   s3_i360$get_object(
+#     Bucket = Sys.getenv("I360_S3_BUCKET"), 
+#     Key = .) %>%
+#   .$Body %>%
+#   readr::write_file(
+#     ., 
+#     "i360_local_data.csv"
+#   )
+# 
+# drive_upload(
+#   media = "i360_local_data.csv",
+#   path = shared_google_drive,
+#   overwrite = TRUE, verbose = TRUE
+# )
+
+
+```
+
+```{r message=FALSE, warning=FALSE}
+
+# local1 <- readxl::read_xlsx(
+#   "~/actualize/data/local.csv"
+# )
+
+```
 
 
